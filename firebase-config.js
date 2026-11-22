@@ -13,4 +13,4 @@ export const firebaseConfig = {
 };
 
 // TODO: GASをウェブアプリとしてデプロイした後、/exec で終わるURLに置き換える
-export const CORE_API_URL = "ここにGASのWebアプリURL";
+export const CORE_API_URL = "https://script.google.com/macros/s/AKfycbxuIntsWI8VXT-_DMQUXhM2_-I2L3T2ju4fDoahL7cC_Reo92yt3DJoRm9uJ6YPaqittQ/exec";
