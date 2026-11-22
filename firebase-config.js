@@ -1,6 +1,6 @@
-// Firebase Consoleで作成した shokubure-core-system Webアプリの設定
-// Web APIキーはFirebase Webアプリ設定の公開クライアント情報です。
-// サービスアカウント鍵・秘密鍵・パスワードは絶対にここへ記載しないでください。
+// Firebase Webアプリ設定
+// Firebase Web APIキーは公開クライアント設定です。
+// サービスアカウント鍵・秘密鍵・パスワードは絶対に記載しないでください。
 
 export const firebaseConfig = {
   apiKey: "AIzaSyB16kr_JzxFldmQ-vfJsWVsHD55_8fqiM8",
@@ -12,5 +12,5 @@ export const firebaseConfig = {
   measurementId: "G-WKPFQC6901"
 };
 
-// TODO: GASをウェブアプリとしてデプロイした後、/exec で終わるURLに置き換える
+// GAS WebアプリURL
 export const CORE_API_URL = "https://script.google.com/macros/s/AKfycbxuIntsWI8VXT-_DMQUXhM2_-I2L3T2ju4fDoahL7cC_Reo92yt3DJoRm9uJ6YPaqittQ/exec";
