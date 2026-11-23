@@ -2,166 +2,47 @@
 <html lang="ja">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="職ブレ-CORE System- ログイン">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="職ブレ-CORE System- 人材マッチングプラットフォーム">
   <title>職ブレ-CORE System-</title>
   <link rel="stylesheet" href="./style.css">
 </head>
 <body>
-  <main class="page">
-    <section class="panel">
+  <div id="authView" class="auth-shell">
+    <section class="auth-card">
       <div class="brand">職ブレ <span>CORE System</span></div>
-      <h1 id="pageTitle">ログイン</h1>
-      <p class="sub">アカウントにログインしてください。</p>
-
+      <h1 id="authTitle">ログイン</h1>
+      <p class="muted">企業と求職者をつなぐ採用プラットフォーム</p>
       <form id="authForm">
-        <div id="nameGroup" class="field hidden">
-          <label for="displayName">氏名</label>
-          <input id="displayName" type="text" autocomplete="name" placeholder="山田 太郎">
-        </div>
-        <div class="field">
-          <label for="email">メールアドレス</label>
-          <input id="email" type="email" autocomplete="email" required placeholder="name@example.com">
-        </div>
-        <div class="field">
-          <label for="password">パスワード</label>
-          <input id="password" type="password" autocomplete="current-password" required minlength="6" placeholder="6文字以上">
-        </div>
-        <div id="roleGroup" class="field hidden">
-          <label for="requestedRole">利用区分</label>
-          <select id="requestedRole">
-            <option value="candidate">求職者</option>
-            <option value="employee">社内メンバー（承認制）</option>
-            <option value="partner">提携企業・パートナー（承認制）</option>
-          </select>
-          <small>社内メンバー・パートナーは管理者の承認後に利用できます。</small>
-        </div>
-        <button id="submitButton" type="submit">ログイン</button>
+        <div id="nameWrap" class="field hidden"><label>氏名・担当者名</label><input id="displayName" autocomplete="name"></div>
+        <div id="companyWrap" class="field hidden"><label>企業名（企業登録の場合）</label><input id="companyName"></div>
+        <div class="field"><label>メールアドレス</label><input id="email" type="email" autocomplete="email" required></div>
+        <div class="field"><label>パスワード</label><input id="password" type="password" minlength="6" required autocomplete="current-password"></div>
+        <div id="roleWrap" class="field hidden"><label>利用区分</label><select id="requestedRole"><option value="candidate">求職者</option><option value="company">企業</option><option value="employee">社内メンバー（承認制）</option><option value="partner">提携パートナー（承認制）</option></select></div>
+        <button class="btn primary full" id="authSubmit">ログイン</button>
       </form>
-
-      <div class="links">
-        <button type="button" class="textButton" id="toggleMode">新規アカウント登録はこちら</button>
-        <button type="button" class="textButton" id="resetPassword">パスワードを忘れた場合</button>
-      </div>
-      <p id="message" class="message" role="status"></p>
+      <div class="auth-links"><button class="link-button" id="toggleAuth">新規アカウント登録はこちら</button><button class="link-button" id="resetPassword">パスワードを忘れた場合</button></div>
+      <p id="authMessage" class="message" role="status"></p>
     </section>
-    <footer>職ブレ-CORE System-</footer>
-  </main>
+  </div>
 
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/13.4.0/firebase-app.js";
-    import {
-      getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword,
-      sendEmailVerification, sendPasswordResetEmail, signOut
-    } from "https://www.gstatic.com/firebasejs/13.4.0/firebase-auth.js";
-    import { firebaseConfig, CORE_API_URL } from "./firebase-config.js";
-
-    const app = initializeApp(firebaseConfig);
-    const auth = getAuth(app);
-
-    const form = document.getElementById("authForm");
-    const pageTitle = document.getElementById("pageTitle");
-    const submitButton = document.getElementById("submitButton");
-    const toggleMode = document.getElementById("toggleMode");
-    const nameGroup = document.getElementById("nameGroup");
-    const roleGroup = document.getElementById("roleGroup");
-    const message = document.getElementById("message");
-    let isRegisterMode = false;
-
-    function showMessage(text, isError = false) {
-      message.textContent = text;
-      message.className = isError ? "message error" : "message";
-    }
-
-    function setMode(register) {
-      isRegisterMode = register;
-      pageTitle.textContent = register ? "新規アカウント登録" : "ログイン";
-      submitButton.textContent = register ? "登録して確認メールを送信" : "ログイン";
-      nameGroup.classList.toggle("hidden", !register);
-      roleGroup.classList.toggle("hidden", !register);
-      toggleMode.textContent = register ? "ログインはこちら" : "新規アカウント登録はこちら";
-      document.getElementById("password").autocomplete = register ? "new-password" : "current-password";
-      showMessage("");
-    }
-
-    async function callCore(action, idToken, payload = {}) {
-      if (!CORE_API_URL || CORE_API_URL.includes("ここにGAS")) {
-        throw new Error("GASのWebアプリURLが未設定です。firebase-config.jsを確認してください。");
-      }
-      const response = await fetch(CORE_API_URL, {
-        method: "POST",
-        headers: { "Content-Type": "text/plain;charset=utf-8" },
-        body: JSON.stringify({ action, idToken, ...payload })
-      });
-      if (!response.ok) throw new Error("CORE APIとの通信に失敗しました。");
-      const result = await response.json();
-      if (!result || result.ok !== true) throw new Error(result?.message || "CORE APIでエラーが発生しました。");
-      return result;
-    }
-
-    toggleMode.addEventListener("click", () => setMode(!isRegisterMode));
-
-    document.getElementById("resetPassword").addEventListener("click", async () => {
-      const email = document.getElementById("email").value.trim();
-      if (!email) return showMessage("先にメールアドレスを入力してください。", true);
-      try {
-        await sendPasswordResetEmail(auth, email);
-        showMessage("パスワード再設定メールを送信しました。");
-      } catch (error) {
-        showMessage(error.message, true);
-      }
-    });
-
-    form.addEventListener("submit", async (event) => {
-      event.preventDefault();
-      submitButton.disabled = true;
-      showMessage("処理中です。しばらくお待ちください。");
-      const email = document.getElementById("email").value.trim();
-      const password = document.getElementById("password").value;
-      const displayName = document.getElementById("displayName").value.trim();
-      const requestedRole = document.getElementById("requestedRole").value;
-
-      try {
-        if (isRegisterMode) {
-          if (!displayName) throw new Error("氏名を入力してください。");
-          const credential = await createUserWithEmailAndPassword(auth, email, password);
-          await sendEmailVerification(credential.user);
-          // 希望区分は申請情報。実際の権限は必ずCORE側で決定する。
-          localStorage.setItem("core_requested_role", requestedRole);
-          localStorage.setItem("core_display_name", displayName);
-          await signOut(auth);
-          setMode(false);
-          showMessage("確認メールを送信しました。メール内のリンクで認証後、ログインしてください。");
-        } else {
-          const credential = await signInWithEmailAndPassword(auth, email, password);
-          await credential.user.reload();
-          if (!credential.user.emailVerified) {
-            await signOut(auth);
-            throw new Error("メール認証が完了していません。確認メールのリンクを開いてください。");
-          }
-          const idToken = await credential.user.getIdToken(true);
-          const requestedRoleFromStorage = localStorage.getItem("core_requested_role") || "candidate";
-          const displayNameFromStorage = localStorage.getItem("core_display_name") || "";
-          const result = await callCore("auth.syncProfile", idToken, {
-            requestedRole: requestedRoleFromStorage,
-            displayName: displayNameFromStorage
-          });
-          localStorage.removeItem("core_requested_role");
-          localStorage.removeItem("core_display_name");
-          if (result.profile?.status === "pending") {
-            showMessage("登録を受け付けました。管理者の承認後に利用できます。");
-          } else {
-            showMessage("認証とプロフィール同期が完了しました。業務画面は次の開発段階で追加します。");
-          }
-        }
-      } catch (error) {
-        showMessage(error.message || "処理に失敗しました。", true);
-      } finally {
-        submitButton.disabled = false;
-      }
-    });
-
-    setMode(false);
-  </script>
+  <div id="appView" class="app-shell hidden">
+    <aside class="sidebar">
+      <div class="brand side-brand">職ブレ <span>CORE</span></div>
+      <div class="user-mini"><div class="avatar" id="avatar">C</div><div><strong id="userName">ユーザー</strong><small id="userRole">---</small></div></div>
+      <nav id="sideNav"></nav>
+      <button id="logoutButton" class="btn ghost full logout">ログアウト</button>
+    </aside>
+    <main class="main">
+      <header class="topbar">
+        <div><div class="eyebrow">CORE PLATFORM</div><h1 id="viewTitle">ダッシュボード</h1></div>
+        <div class="top-actions"><span id="todayLabel"></span><button class="icon-btn" id="refreshButton" title="更新">↻</button></div>
+      </header>
+      <div id="notice" class="notice hidden"></div>
+      <section id="content" class="content"></section>
+    </main>
+  </div>
+  <div id="modalRoot"></div>
+  <script type="module" src="./app.js"></script>
 </body>
 </html>
